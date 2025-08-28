@@ -1,0 +1,101 @@
+Kuru is a highly gas-efficient fully on-chain CLOB with backstop liquidity features. This combines the best of TradFi and DeFi together in order to trade both long-tail and short-tail assets seamlessly.
+
+Prize distribution and scoring
+Total Prize Pool: $100,000
+
+Primary Prize Pool: $95,000
+
+The prize distribution has 2 possible triggers:
+
+If one or more valid medium severity findings are found, the total pot size is $50,000
+If one or more valid high severity findings are found, the total pot size is $100,000
+$5,000 of the prize pot is reserved for Low Severity findings. These reports are judged based on quality and reviewers are then ranked from 1st to 5th for the purpose of prize allocation.
+
+1st: $2.5k
+2nd: $1k
+3rd: $700
+4th: $500
+5th: $300
+Scoring described in the competition scoring page.
+
+Findings Severities described in detail on our docs page.
+
+Documentation
+Architecture Overview
+OrderBook Contract (Explanation)
+Abstract AMM Contract (Explanation)
+Kuru AMM Vault Contract (Explanation)
+Math behind the Vault
+Scope
+Repository: https://github.com/Kuru-Labs/kuru-contracts
+
+Commit: 93d86d7bf520f6720fb17c167cd9f7c55af3bbf5
+
+nSLOC: 2673
+
+Files: All files in contracts/*,
+
+except:
+contracts/periphery/KuruUtils.sol
+contracts/libraries/BitMath.sol
+Note: contracts/libraries/FixedPointMathLib.sol is an already audited library except for
+the function FixedPointMathLib.mulDivRound, which we have added.
+
+Build Instructions
+For building, you can run forge build
+For testing, you can run forge test –ffi
+Note: The contracts cannot be compiled without the IR pipeline
+
+Out of scope
+Tokens
+
+Spearbit Review Draft Report
+Only normal ERC20 tokens are supported (ERC777 is not supported)
+Fee-on-Transfer, Rebasing tokens are not supported
+Accepted Centralization Risks
+
+The protocol admin has upgrade authority over all contracts and can decide to do an upgrade in case of an emergency. Furthermore, the protocol admin can pause trading on markets and can pause deposits/withdrawals.
+
+Accumulated rounding loss on fragmented flip order fills
+
+This is a potential DOS vector only if the price and size precisions are unfavourably set. In a well-configured market, the cost of DOS will be well above the damage caused to makers, and hence, is not economically viable.
+
+Out of order execution user requests on KuruForwarder
+
+The Kuru Forwarder contract allows users to pass requests which do not steadily increase by 1, i.e, users do not have to pass requests with nonces as 1,2,3...n. Instead, it allows any request as long as the request nonce is equal to or larger than the stored user nonce. This is intentional, as now makers can submit transactions without being nonce-aware by just setting the nonce as the current timestamp.
+
+A market can be DOSed if a user spams it with a large number of orders
+
+This is only feasible if the `minSize` of the market is set very low. A well-configured market should have a large enough `minSize` such that the market cannot be DOSed.
+
+Vault can leak value to arbitrage due to deposit rebalancing
+
+Since we do not reinvest fees generated from the backstop liquidity vault back into the pool like normal CPAMMs do, the vault can be imbalanced at times. Due to this, actors performing arbitrage can execute a zero-slippage swap by doing a deposit and withdrawal. However, since this just makes the vault rebalance, we do not consider this an issue to the protocol.
+
+Issues which arise due to market parameters being set badly
+
+A misconfigured market may result in unforeseen consequences such as precision losses, therefore leading to loss of funds. However, this is out of scope unless there exists a way where a user can exploit other markets through misconfiguring a market. Assume that the application takes care of routing users through healthy markets.
+
+Withdrawals may fail from large partial fills
+
+If the new vault bid / ask size falls below the partial bid / ask size, the partial fills are fully un-done. Hence, if the withdrawal is small enough, the actual withdrawal amounts may be insufficient to perform this un-doing of the partial fills, causing the withdrawal to revert. This is a very rare scenario and is out of scope for the audit.
+
+Findings found by LightChaser
+
+https://gist.github.com/ChaseTheLight01/e193a7a5945434650815d9067750a601
+Build Instructions
+git init
+forge install OpenZeppelin/openzeppelin-contracts foundry-rs/forge-std
+npm install
+forge build
+forge test --ffi
+For building, you can run forge build
+For testing, you can run forge test –ffi
+Note: The contracts cannot be compiled without the IR pipeline
+
+Basic POC test
+Mandatory, unless can difficult to prove path exists
+You can find a POC script here
+Note: Please add this to the test/ directory in the repo
+Contact Us
+For any issues or concerns regarding this competition, please reach out to the Cantina core team through the Cantina Discord.
